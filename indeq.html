@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8" />
+<title>best.jj</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background: #222;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 30px;
+  }
+  .box {
+    background: #333;
+    padding: 20px;
+    margin: 10px;
+    border-radius: 8px;
+    width: 320px;
+  }
+  input, button {
+    width: 100%;
+    padding: 10px;
+    margin: 8px 0;
+    border-radius: 4px;
+    border: none;
+  }
+  input {
+    background: #444;
+    color: white;
+  }
+  button {
+    background: #007bff;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+  }
+  #inviteCodeDisplay {
+    margin-top: 15px;
+    background: #555;
+    padding: 10px;
+    border-radius: 6px;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+
+<h1>Üyelik Sistemi</h1>
+
+<div id="registerBox" class="box">
+  <h2>Kayıt Ol</h2>
+  <input id="regUser" placeholder="Kullanıcı Adı" />
+  <input id="regPass" type="password" placeholder="Şifre" />
+  <input id="regInvite" placeholder="Davet Kodu (zorunlu)" />
+  <button onclick="register()">Kayıt Ol</button>
+  <div id="regMsg" style="color:#f66;"></div>
+</div>
+
+<div id="loginBox" class="box">
+  <h2>Giriş Yap</h2>
+  <input id="logUser" placeholder="Kullanıcı Adı" />
+  <input id="logPass" type="password" placeholder="Şifre" />
+  <button onclick="login()">Giriş</button>
+  <div id="logMsg" style="color:#f66;"></div>
+</div>
+
+<div id="userBox" class="box" style="display:none;">
+  <h2>Hoşgeldin, <span id="userName"></span></h2>
+  <p>Senin davet kodun:</p>
+  <div id="inviteCodeDisplay"></div>
+  <button id="downloadCheatBtn">Hile İndir</button>
+  <button onclick="logout()">Çıkış Yap</button>
+</div>
+
+<script>
+  let users = JSON.parse(localStorage.getItem('users') || '{}');
+  let currentUser = null;
+
+  function generateInviteCode() {
+    return Math.random().toString(36).substring(2, 8).toUpperCase();
+  }
+
+  function register() {
+    const user = document.getElementById('regUser').value.trim();
+    const pass = document.getElementById('regPass').value.trim();
+    const invite = document.getElementById('regInvite').value.trim().toUpperCase();
+    const regMsg = document.getElementById('regMsg');
+
+    regMsg.style.color = '#f66';
+    if (!user || !pass || !invite) {
+      regMsg.textContent = 'Lütfen tüm alanları doldurun!';
+      return;
+    }
+    if (users[user]) {
+      regMsg.textContent = 'Bu kullanıcı adı zaten alınmış!';
+      return;
+    }
+
+    const validInvites = Object.values(users).map(u => u.invite);
+    if (!validInvites.includes(invite)) {
+      regMsg.textContent = 'Geçersiz davet kodu!';
+      return;
+    }
+
+    const newInvite = generateInviteCode();
+    users[user] = { pass, invite: newInvite };
+    localStorage.setItem('users', JSON.stringify(users));
+
+    regMsg.style.color = 'lightgreen';
+    regMsg.textContent = `Kayıt başarılı! Yeni davet kodun: ${newInvite}`;
+    clearRegisterForm();
+  }
+
+  function clearRegisterForm() {
+    document.getElementById('regUser').value = '';
+    document.getElementById('regPass').value = '';
+    document.getElementById('regInvite').value = '';
+  }
+
+  function login() {
+    const user = document.getElementById('logUser').value.trim();
+    const pass = document.getElementById('logPass').value.trim();
+    const logMsg = document.getElementById('logMsg');
+
+    logMsg.style.color = '#f66';
+    if (!user || !pass) {
+      logMsg.textContent = 'Lütfen kullanıcı adı ve şifreyi girin!';
+      return;
+    }
+    if (!users[user] || users[user].pass !== pass) {
+      logMsg.textContent = 'Kullanıcı adı veya şifre yanlış!';
+      return;
+    }
+
+    currentUser = user;
+    showUserBox();
+  }
+
+  function showUserBox() {
+    document.getElementById('registerBox').style.display = 'none';
+    document.getElementById('loginBox').style.display = 'none';
+    document.getElementById('userBox').style.display = 'block';
+    document.getElementById('userName').textContent = currentUser;
+    document.getElementById('inviteCodeDisplay').textContent = users[currentUser].invite;
+  }
+
+  document.getElementById('downloadCheatBtn').addEventListener('click', () => {
+    window.open('https://example.com/cheat.zip', '_blank');
+  });
+
+  function logout() {
+    currentUser = null;
+    document.getElementById('registerBox').style.display = 'block';
+    document.getElementById('loginBox').style.display = 'block';
+    document.getElementById('userBox').style.display = 'none';
+    document.getElementById('regMsg').textContent = '';
+    document.getElementById('logMsg').textContent = '';
+  }
+
+  // İlk kullanıcı otomatik oluşturulacaksa:
+  if (Object.keys(users).length === 0) {
+    const firstUser = 'admin1234';
+    const firstPass = '1234';
+    const firstInvite = generateInviteCode();
+    users[firstUser] = { pass: firstPass, invite: firstInvite };
+    localStorage.setItem('users', JSON.stringify(users));
+    alert(`Sistem hazır! İlk kullanıcı: ${firstUser} / ${firstPass}\nDavet Kodu: ${firstInvite}`);
+  }
+</script>
+
+</body>
+</html>
+
+<div style="position: fixed; top: 10px; right: 200px; text-align: center; z-index: 999;">
+  <img src="https://cdn.creazilla.com/cliparts/78822/killer-clipart-xl.png"
+       alt="Logo"
+       style="width: 200px; height: auto; border-radius: 8px;" />
+  <div style="color: white; font-weight: bold; margin-top: 4px; font-family: Arial, sans-serif; font-size: 50px;">
+    Best Kill
+  </div>
+</div>
+
+<body style="margin:0; background: url('https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExbjFqbXBhemY5Zm9vejIzNGV5bnduaG1sNmNnd3RuOWN3emZwNXZjbiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/h2lLPw08DIw976HU0q/giphy.gif') no-repeat center center fixed; background-size: cover;">
